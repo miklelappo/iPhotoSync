@@ -1,26 +1,32 @@
+#![allow(non_snake_case)]
+
 mod db;
 mod cli;
+mod fs_utils;
 
 use db::Asset;
 use std::io;
 use indicatif::{ ProgressBar, ProgressStyle };
-use std::thread;
-use std::time::Duration;
 
 fn main() -> Result<(), io::Error> {
     let args = cli::cli().get_matches();
     let mut backup_table: Vec<Asset> = Vec::new();
-    backup_table = db::get_db_assets(args.value_of("database").unwrap(), backup_table)
+    let backup_directory: String = String::from(args.value_of("backup_directory").unwrap());
+    let library: String = String::from(args.value_of("database").unwrap());
+
+    fs_utils::check_path_exists_or_create(&backup_directory)?;
+    backup_table = db::get_db_assets(&library, backup_table)
         .expect("Failed to get assets from DB");
-    let pb = ProgressBar::new(backup_table.len() as u64);
-    pb.set_style(ProgressStyle::default_bar()
+
+    let progress_bar = ProgressBar::new(backup_table.len() as u64);
+    progress_bar.set_style(ProgressStyle::default_bar()
                     .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
                     .progress_chars("##-"));
 
     for asset in backup_table.iter() {
-        pb.inc(1);
-        thread::sleep(Duration::from_millis(1000));
+        progress_bar.inc(1);
+        fs_utils::backup_asset(&library, &backup_directory, &asset)?;
     }
-    pb.finish_with_message("done");
+    progress_bar.finish_with_message("done");
     Ok(())
 }

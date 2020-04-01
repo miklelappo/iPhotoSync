@@ -1,11 +1,9 @@
-use clap::{crate_authors, crate_name, crate_version, App, AppSettings, Arg, SubCommand};
+use clap::{crate_authors, crate_name, crate_version, App, AppSettings, Arg};
 use lazy_static::lazy_static;
 
 lazy_static! {
     static ref ABOUT: String = {
-        format!(
-            "A iPhoto/Photo sync utility",
-        )
+            "A iPhoto/Photo sync utility".to_string()
     };
 }
 

@@ -2,10 +2,10 @@ use rusqlite::{Connection, Result, NO_PARAMS};
 
 #[derive(Debug)]
 pub struct Asset {
-	album_name: String,
-	dir: String,
-	filename: String,
-	original_filename: String,
+	pub album_name: String,
+	pub dir: String,
+	pub filename: String,
+	pub original_filename: String,
 }
 
 impl Clone for Asset {
@@ -20,6 +20,7 @@ impl Clone for Asset {
 }
 
 pub fn get_db_assets(filename: &str, mut ret: Vec<Asset>) -> Result<Vec<Asset>> {
+    let filename = format!("{}/database/Photos.sqlite", filename);
     let conn = Connection::open(filename)?;
     let mut backup_table_statement = conn.prepare("
         select ZGENERICALBUM.ZTITLE, ZDIRECTORY, ZFILENAME, ZORIGINALFILENAME
