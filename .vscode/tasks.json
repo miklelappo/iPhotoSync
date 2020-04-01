@@ -10,8 +10,9 @@
             "args": [
                 "run",
                 // "--release",
-                // "--",
-                // "arg1"
+                "--",
+                "--database",
+                "/tmp/Photos.sqlite"
             ],
             "group": {
                 "kind": "build",
