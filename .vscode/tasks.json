@@ -12,7 +12,9 @@
                 // "--release",
                 "--",
                 "--database",
-                "/tmp/Photos.sqlite"
+                "/tmp/Photos.sqlite",
+                "--backup_directory",
+                "/tmp/iPhoto_backup"
             ],
             "group": {
                 "kind": "build",

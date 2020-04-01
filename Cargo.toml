@@ -10,3 +10,4 @@ edition = "2018"
 rusqlite = { version = "0.21.0" }
 clap = { version = "2.33.0" }
 lazy_static = { version = "1.4.0" }
+indicatif = { version = "0.14.0" }

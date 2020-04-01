@@ -8,7 +8,18 @@ pub struct Asset {
 	original_filename: String,
 }
 
-pub fn get_db_assets(filename: &str) -> Result<()> {
+impl Clone for Asset {
+    fn clone(&self) -> Asset {
+        Asset {
+            album_name: self.album_name.clone(),
+            dir: self.dir.clone(),
+            filename: self.filename.clone(),
+            original_filename: self.original_filename.clone()
+        }
+    }
+}
+
+pub fn get_db_assets(filename: &str, mut ret: Vec<Asset>) -> Result<Vec<Asset>> {
     let conn = Connection::open(filename)?;
     let mut backup_table_statement = conn.prepare("
         select ZGENERICALBUM.ZTITLE, ZDIRECTORY, ZFILENAME, ZORIGINALFILENAME
@@ -27,7 +38,7 @@ pub fn get_db_assets(filename: &str) -> Result<()> {
 	})?;
     for asset in backup_table {
 		let asset = &asset?;
-        println!("Found asset {:?}", asset);
+        ret.push(asset.clone());
     }
-    Ok(())
+    Ok(ret)
 }
