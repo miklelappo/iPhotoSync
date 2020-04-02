@@ -25,4 +25,8 @@ pub fn cli() -> App<'static, 'static> {
             .takes_value(true)
             .required(true)
             .help("Select backup directory for iPhoto events"))
+        .arg(Arg::with_name("dry_run")
+            .short("n")
+            .long("dry_run")
+            .help("show what would have been transferred"))
 }
