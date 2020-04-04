@@ -15,7 +15,7 @@ fn main() -> Result<(), io::Error> {
     let library: String = String::from(args.value_of("database").unwrap());
     let simulate: bool = args.is_present("dry_run");
 
-    fs_utils::check_path_exists_or_create(&backup_directory)?;
+    fs_utils::check_path_exists_or_create(&backup_directory, simulate)?;
     backup_table = db::get_db_assets(&library, backup_table)
         .expect("Failed to get assets from DB");
 
