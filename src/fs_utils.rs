@@ -1,8 +1,7 @@
 use crate::db;
-use db::Asset;
+use db::{ Asset };
 use indicatif::{ProgressBar, ProgressStyle};
-use std::fs;
-use std::io;
+use std::{ fs, io };
 use std::path::Path;
 
 fn check_path_exists_or_create(path: &Path, dry_run: bool) -> Result<(), io::Error> {
@@ -42,9 +41,9 @@ pub fn backup_assets(
     library: &Path,
     backup_directory: &Path,
     assets: &[Asset],
-    dry_run: bool,
+    simulate: bool,
 ) -> Result<(), io::Error> {
-    check_path_exists_or_create(&backup_directory, dry_run)?;
+    check_path_exists_or_create(&backup_directory, simulate)?;
     let progress_bar = ProgressBar::new(assets.len() as u64);
     progress_bar.set_style(
         ProgressStyle::default_bar()
@@ -54,7 +53,7 @@ pub fn backup_assets(
 
     for asset in assets.iter() {
         progress_bar.inc(1);
-        backup_asset(&library, &backup_directory, &asset, dry_run)?;
+        backup_asset(&library, &backup_directory, asset, simulate)?;
     }
     progress_bar.finish_with_message("done");
     Ok(())

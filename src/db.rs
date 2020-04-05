@@ -10,6 +10,13 @@ pub struct Asset {
     pub original_filename: String,
 }
 
+impl PartialEq for Asset {
+    fn eq(&self, other: &Self) -> bool {
+        self.album_name == other.album_name  
+            &&  self.original_filename == other.original_filename
+    }
+}
+
 pub fn get_db_assets(filename: &Path) -> Result<Vec<Asset>> {
     let filename = filename.join("database").join("Photos.sqlite");
     let conn = Connection::open(filename)?;
@@ -44,17 +51,29 @@ pub fn get_db_assets(filename: &Path) -> Result<Vec<Asset>> {
         );
     }
 
-    let mut ret = Vec::new();
+    let mut ret: Vec<Asset> = Vec::new();
     for asset in backup_table {
         let asset = &mut asset?;
-        loop {
-            if let Some(parent) = albums_hash.get(&asset.album_name) {
-                if parent.is_empty() {
+        while let Some(parent) = albums_hash.get(&asset.album_name) {
+            if parent.is_empty() {
+                break;
+            }
+            asset.album_name = format!("{}/{}", &parent, asset.album_name);
+        }
+
+        if ret.contains(&asset) {
+            let mut i: u64 = 0;
+            let original_filename = asset.original_filename.clone();
+            loop {
+                println!("{}", i);
+                i+=1;
+                asset.original_filename = format!("{}_{}", i, original_filename);
+                if !ret.contains(&asset) {
                     break;
                 }
-                asset.album_name = format!("{}/{}", &parent, asset.album_name);
             }
         }
+
         ret.push(asset.clone());
     }
     Ok(ret)
