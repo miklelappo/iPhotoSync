@@ -1,27 +1,17 @@
 use rusqlite::{Connection, Result, NO_PARAMS};
 use std::collections::HashMap;
+use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Asset {
-	pub album_name: String,
-	pub dir: String,
-	pub filename: String,
-	pub original_filename: String,
+    pub album_name: String,
+    pub dir: String,
+    pub filename: String,
+    pub original_filename: String,
 }
 
-impl Clone for Asset {
-    fn clone(&self) -> Asset {
-        Asset {
-            album_name: self.album_name.clone(),
-            dir: self.dir.clone(),
-            filename: self.filename.clone(),
-            original_filename: self.original_filename.clone()
-        }
-    }
-}
-
-pub fn get_db_assets(filename: &str, mut ret: Vec<Asset>) -> Result<Vec<Asset>> {
-    let filename = format!("{}/database/Photos.sqlite", filename);
+pub fn get_db_assets(filename: &Path) -> Result<Vec<Asset>> {
+    let filename = filename.join("database").join("Photos.sqlite");
     let conn = Connection::open(filename)?;
     // Get all assets
     let mut backup_table_statement = conn.prepare("
@@ -31,7 +21,7 @@ pub fn get_db_assets(filename: &str, mut ret: Vec<Asset>) -> Result<Vec<Asset>> 
         inner join ZGENERICALBUM ON Z_26ASSETS.Z_26ALBUMS = ZGENERICALBUM.Z_PK
         inner join ZADDITIONALASSETATTRIBUTES ON Z_26ASSETS.Z_34ASSETS = ZADDITIONALASSETATTRIBUTES.ZASSET"
     )?;
-	let backup_table = backup_table_statement.query_map(NO_PARAMS, |row| {
+    let backup_table = backup_table_statement.query_map(NO_PARAMS, |row| {
         Ok(Asset {
             album_name: row.get(0)?,
             dir: row.get(1)?,
@@ -47,27 +37,23 @@ pub fn get_db_assets(filename: &str, mut ret: Vec<Asset>) -> Result<Vec<Asset>> 
     ")?;
     let mut albums_hash: HashMap<String, String> = HashMap::new();
     let mut albums_rows = albums_statement.query(NO_PARAMS)?;
-    while let Some(row) = albums_rows.next()?  {
+    while let Some(row) = albums_rows.next()? {
         albums_hash.insert(
-            row.get(1)?, //album name
-            match row.get(2) { //parent folder name if exists
-                Ok(name) => name,
-                _ => String::from(""),
-            }
+            row.get(1)?,                    //album name
+            row.get(2).unwrap_or_default(), //parent folder name if exists
         );
     }
 
+    let mut ret = Vec::new();
     for asset in backup_table {
-        let asset = & mut asset?;
-        let mut album: String = asset.album_name.clone();
-        loop
-        {
-            let parent = albums_hash.get(&album).unwrap();
-            if parent.is_empty() {
-                break;
+        let asset = &mut asset?;
+        loop {
+            if let Some(parent) = albums_hash.get(&asset.album_name) {
+                if parent.is_empty() {
+                    break;
+                }
+                asset.album_name = format!("{}/{}", &parent, asset.album_name);
             }
-            album = parent.to_string();
-            asset.album_name = format!("{}/{}", &album, asset.album_name);
         }
         ret.push(asset.clone());
     }
